@@ -18,6 +18,12 @@ class music_cog(commands.Cog):
         self.musicQueue = {}
         self.queueIndex = {}
         
+        self.YTDL_OPTIONS = {'format': 'bestaudio', 'nonplaylist': 'True'}
+        self.FFMPEG_OPTIONS = {
+            'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
+            'options': '-vn'
+            }
+        
         self.vc = {}
         
     @commands.Cog.listener()
@@ -39,3 +45,29 @@ class music_cog(commands.Cog):
             self.queueIndex[id] = 0
             self.vc[id] = None
             self.is_paused[id] = self.is_playing[id] = False
+            
+    async def join_VC(self, ctx, channel):
+        """
+        Connects the bot to the specified voice channel or moves it if already connected.
+
+        Checks if the bot is already connected to a voice channel in the current guild:
+        - If the bot is not connected, it attempts to connect to the provided channel.
+        - If the connection fails, an error message is sent to the context.
+        - If the bot is already connected to a voice channel, it moves to the provided channel.
+
+        Parameters:
+            ctx (Context): The context from the command invocation, containing guild info.
+            channel (VoiceChannel): The target voice channel to which the bot should join or move.
+
+        Returns:
+            None
+        """
+        id = int(ctx.guild.id)
+        if self.vc[id] == None or not self.vc[id].is_connected():
+            self.vc[id] = await channel.connect()
+
+            if self.vc[id] == None:
+                await ctx.send("Could not connect to the voice channel.")
+                return
+        else:
+            await self.vc[id].move_to(channel)
