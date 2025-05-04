@@ -71,3 +71,22 @@ class music_cog(commands.Cog):
                 return
         else:
             await self.vc[id].move_to(channel)
+            
+    def search_YT(self, search):
+        """
+        Searches YouTube for the given query and returns the top 10 video IDs.
+
+        This method constructs a search query string, performs the search on YouTube, 
+        and extracts the video IDs from the search results. It returns a list of the 
+        top 10 video IDs found.
+
+        Parameters:
+            search (str): The search query to look up on YouTube.
+
+        Returns:
+            list: A list of up to 10 YouTube video IDs (strings).
+        """
+        queryString = parse.urlencode({'search_query': search})
+        htmContent = request.urlopen('http://www.youtube.com/results?' + queryString)
+        searchResults = re.findall('/watch\?v=(.{11})', htmContent.read().decode())
+        return searchResults[0:10]
