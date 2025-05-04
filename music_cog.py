@@ -90,3 +90,30 @@ class music_cog(commands.Cog):
         htmContent = request.urlopen('http://www.youtube.com/results?' + queryString)
         searchResults = re.findall('/watch\?v=(.{11})', htmContent.read().decode())
         return searchResults[0:10]
+    
+    def extract_YT(self, url):
+        """
+        Extracts YouTube video information such as title, thumbnail, and video URL.
+
+        This method uses `youtube-dl` to extract video details without downloading the video. 
+        It retrieves information such as the video title, the source URL of the video, 
+        and the thumbnail image URL.
+
+        Parameters:
+            url (str): The URL of the YouTube video to extract information from.
+
+        Returns:
+            dict: A dictionary containing the video title, video URL, thumbnail URL, and the source URL of the video.
+                Returns False if there was an error during extraction.
+        """
+        with YoutubeDL(self.YTDL_OPTIONS) as ydl:
+            try:
+                info = ydl.extract_info(url, download=False)
+            except:
+                return False
+        return {
+            'link': 'https://www.youtube.com/watch?v=' + url,
+            'thumbnail': 'https://i.ytimg.com/vi/' + url + '/hqdefault.jpg?sqp=-oaymwEcCOADEI4CSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLD5uL4xKN-IUfez6KIW_j5y70mlig',
+            'source': info['formats'][0]['url'],
+            'title': info['title']
+        }
