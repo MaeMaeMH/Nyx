@@ -148,3 +148,7 @@ class music_cog(commands.Cog):
             
             self.vc[id].play(discord.FFmpegPCMAudio(
                 song['song'], **self.FFMPEG_OPTIONS), after=lambda e: self.play_next(ctx))
+        else:
+            await ctx.send("There are no songs in the queue to be played.")
+            self.queueIndex[id] += 1
+            self.is_playing = False #! Unsure if a an '[id]' is needed after self.is_playing or not, revisit later!
