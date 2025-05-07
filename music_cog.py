@@ -118,9 +118,49 @@ class music_cog(commands.Cog):
             'title': info['title']
         }
         
+    def play_next(self, ctx):
+        """
+        Plays the next song in the queue or stops playback if the queue has ended.
+
+        This method is used as a callback when a song finishes playing. It:
+        - Verifies that playback is active for the current guild.
+        - Checks if another song is available in the queue.
+            - If yes: increments the queue index, retrieves the next song, sends a message, and plays it.
+            - If no: advances the queue index and stops playback.
+        - Uses `run_coroutine_threadsafe` to safely send a message from a non-async context.
+        - Registers itself again as the callback after the new song finishes.
+
+        Parameters:
+            ctx (Context): The context object associated with the guild.
+
+        Returns:
+            None
+        """
+        id = id(ctx.guild.id)
+        if not self.is_playing[id]:
+            return
+        if self.queueIndex[id] + 1 < len(self.musicQueue[id]):
+            self.is_playing[id] = True
+            self.queueIndex[id] += 1
+            
+            song = self.musicQueue[id][self.queueIndex[id][0]]
+            message = "Message"
+            coroutine = ctx.send(message)
+            fut = run_coroutine_threadsafe(coroutine, self.bot.loop)
+            try:
+                fut.result()
+            except:
+                pass
+            
+            self.vc[id].play(discord.FFmpegPCMAudio(
+                song['source'], **self.FFMPEG_OPTIONS), after=lambda e: self.play_next(ctx))
+        else:
+            self.queueIndex[id] += 1
+            self.is_playing[id] = False
+        
     async def play_music(self, ctx):
         """
-        Plays the next song in the queue for the current guild.
+        Plays the next song in the queue for the current guild or sends a message if the queue is empty.
 
         Checks if the current queue index is within the queue bounds. If so:
         - Marks the bot as playing and not paused.
