@@ -24,6 +24,10 @@ class music_cog(commands.Cog):
             'options': '-vn'
             }
         
+        self.embedBlue = 0x2c76dd
+        self.embedRed = 0xdf1141
+        self.embedGreen = 0x0eaa51
+        
         self.vc = {}
         
     @commands.Cog.listener()
@@ -45,6 +49,22 @@ class music_cog(commands.Cog):
             self.queueIndex[id] = 0
             self.vc[id] = None
             self.is_paused[id] = self.is_playing[id] = False
+            
+    def now_playing_embed(self, ctx, song):
+            title = song['title']
+            link = song['link']
+            thumbnail = song['thumbnail']
+            author = ctx.author
+            avatar = author.avatar_url
+            
+            embed = discord.Embed(
+                title="Now Playing",
+                description=f'[{title}]({link})',
+                colour=self.embedBlue
+            )
+            embed.set_thumbnail(url=thumbnail)
+            embed.set_footer(text=f'Song added by: {str(author)}', icon_url=avatar)
+            return embed
             
     async def join_VC(self, ctx, channel):
         """
@@ -144,8 +164,8 @@ class music_cog(commands.Cog):
             self.queueIndex[id] += 1
             
             song = self.musicQueue[id][self.queueIndex[id][0]]
-            message = "Message"
-            coroutine = ctx.send(message)
+            message = self.now_playing_embed(ctx, song)
+            coroutine = ctx.send(embed=message)
             fut = run_coroutine_threadsafe(coroutine, self.bot.loop)
             try:
                 fut.result()
@@ -183,8 +203,8 @@ class music_cog(commands.Cog):
             await self.join_VC(ctx, self.musicQueue[id][self.queueIndex[id][1]])
 
             song = self.musicQueue[id][self.queueIndex[id]][0]
-            message = "Message"
-            await ctx.send(message)
+            message = self.now_playing_embed(ctx, song)
+            await ctx.send(embed=message)
             
             self.vc[id].play(discord.FFmpegPCMAudio(
                 song['song'], **self.FFMPEG_OPTIONS), after=lambda e: self.play_next(ctx))
