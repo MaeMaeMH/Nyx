@@ -117,3 +117,34 @@ class music_cog(commands.Cog):
             'source': info['formats'][0]['url'],
             'title': info['title']
         }
+        
+    async def play_music(self, ctx):
+        """
+        Plays the next song in the queue for the current guild.
+
+        Checks if the current queue index is within the queue bounds. If so:
+        - Marks the bot as playing and not paused.
+        - Joins the appropriate voice channel from the queued song entry.
+        - Retrieves the song data and sends a message to the text channel (placeholder for now).
+        - Begins audio playback using FFmpeg with the configured options.
+        - Sets a callback to continue with the next song when playback finishes.
+
+        Parameters:
+            ctx (Context): The context of the command invocation, used for guild and channel resolution.
+
+        Returns:
+            None
+        """
+        id = int(ctx.guild.id)
+        if self.queueIndex[id] < len(self.musicQueue[id]):
+            self.is_playing[id] = True
+            self.is_paused[id] = False
+                
+            await self.join_VC(ctx, self.musicQueue[id][self.queueIndex[id][1]])
+
+            song = self.musicQueue[id][self.queueIndex[id]][0]
+            message = "Message"
+            await ctx.send(message)
+            
+            self.vc[id].play(discord.FFmpegPCMAudio(
+                song['song'], **self.FFMPEG_OPTIONS), after=lambda e: self.play_next(ctx))
