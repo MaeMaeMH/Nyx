@@ -49,7 +49,7 @@ class music_cog(commands.Cog):
             self.queueIndex[id] = 0
             self.vc[id] = None
             self.is_paused[id] = self.is_playing[id] = False
-    ''' 
+   
     def now_playing_embed(self, ctx, song):
             title = song['title']
             link = song['link']
@@ -65,7 +65,6 @@ class music_cog(commands.Cog):
             embed.set_thumbnail(url=thumbnail)
             embed.set_footer(text=f'Song added by: {str(author)}', icon_url=avatar)
             return embed
-    '''
             
     async def join_VC(self, ctx, channel):
         """
@@ -84,14 +83,20 @@ class music_cog(commands.Cog):
             None
         """
         id = int(ctx.guild.id)
-        if self.vc[id] == None or not self.vc[id].is_connected():
-            self.vc[id] = await channel.connect()
+        print(f"[DEBUG] join_VC called for guild {id}")
 
-            if self.vc[id] == None:
-                await ctx.send("Could not connect to the voice channel.")
-                return
-        else:
-            await self.vc[id].move_to(channel)
+        try:
+            if self.vc.get(id) is None or not self.vc[id].is_connected():
+                print("[DEBUG] Attempting to connect...")
+                self.vc[id] = await channel.connect() #! Port need to be open for the bot to return. Currently it gets stuck here and never returns
+                print("[DEBUG] Connected.")
+            else:
+                print("[DEBUG] Moving to new channel...")
+                await self.vc[id].move_to(channel)
+                print("[DEBUG] Moved.")
+        except Exception as e:
+            print(f"[ERROR] join_VC failed: {e}")
+            raise
             
     def search_YT(self, search):
         """
@@ -213,3 +218,40 @@ class music_cog(commands.Cog):
             await ctx.send("There are no songs in the queue to be played.")
             self.queueIndex[id] += 1
             self.is_playing = False #! Unsure if a an '[id]' is needed after self.is_playing or not, revisit later!
+    
+    @ commands.command(
+        name="join",
+        aliases=["j"],
+        help=""
+    )
+    async def join(self, ctx):
+        if ctx.author.voice:
+            userChannel = ctx.author.voice.channel
+            try:
+                print("✅ join_VC abgeschlossen")
+                await ctx.send(f'Nyx has joined {userChannel}')
+                await self.join_VC(ctx, userChannel)
+                await ctx.send(f'Wo bleibt der Rest???')
+            except Exception as e:
+                print(f"❌ Fehler in join_VC: {e}")
+                await ctx.send(f"Fehler beim Beitreten des Channels: {e}")
+        else:
+            await ctx.send("You need to be connected to a voice channel.")
+
+    @ commands.command(
+        name="leave",
+        aliases=["l"],
+        help=""
+    )  
+    async def leave(self, ctx):
+        print("Funtion called")
+        id = int(ctx.guild.id)
+        self.is_playing[id] = self.is_paused[id] = False
+        self.musicQueue[id] = []
+        self.queueIndex[id] = 0
+        if self.vc[id] != None:
+            await ctx.send("Nyx has left the channel")
+            await self.vc[id].disconnect()
+        else:
+            print("Not leaving bitch")
+            print(self.vc[id])

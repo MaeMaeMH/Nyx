@@ -1,5 +1,7 @@
 import discord
 
+#Currently not in use
+
 class BaseEmbed(discord.Embed):
     def __init__(self, title="", description="", colour=0x1a1a40):
         super().__init__(title=title, description=description, colour=colour)
