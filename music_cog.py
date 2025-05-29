@@ -49,7 +49,7 @@ class music_cog(commands.Cog):
             self.queueIndex[id] = 0
             self.vc[id] = None
             self.is_paused[id] = self.is_playing[id] = False
-            
+    ''' 
     def now_playing_embed(self, ctx, song):
             title = song['title']
             link = song['link']
@@ -65,6 +65,7 @@ class music_cog(commands.Cog):
             embed.set_thumbnail(url=thumbnail)
             embed.set_footer(text=f'Song added by: {str(author)}', icon_url=avatar)
             return embed
+    '''
             
     async def join_VC(self, ctx, channel):
         """
